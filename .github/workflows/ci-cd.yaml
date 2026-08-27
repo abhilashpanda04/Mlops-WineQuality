@@ -62,6 +62,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -74,11 +79,11 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Setup CML
-        uses: iterative/setup-cml@v1
+        uses: iterative/setup-cml@v2
 
       - name: Reproduce DVC Pipeline & Generate CML Report
         env:
-          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Reproduce pipeline
           dvc repro
@@ -86,15 +91,22 @@ jobs:
           # Generate report
           echo "## MLOps Pipeline Report" > report.md
           echo "### Model Metrics" >> report.md
+          echo "\`\`\`json" >> report.md
           cat report/scores.json >> report.md
+          echo "" >> report.md
+          echo "\`\`\`" >> report.md
 
           echo "### Model Parameters" >> report.md
+          echo "\`\`\`json" >> report.md
           cat report/params.json >> report.md
+          echo "" >> report.md
+          echo "\`\`\`" >> report.md
 
           # Post CML report to PR if in pull request context
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             cml comment create report.md
           fi
+
 
   docker-build:
     name: Container Build & Verification
