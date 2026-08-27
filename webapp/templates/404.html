@@ -1,62 +1,26 @@
 {% extends 'base.html' %}
 
 {% block title %}
-Error 404
+Page Not Found | 404 Error
 {% endblock title %}
 
-
-{% block custom_css %}
-<!-- Custom CSS -->
-<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-{% endblock custom_css %}
-
 {% block body %}
-
-    <div class="container col-lg-4 col-lg-offset-4 main">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="error-template">
-                    <h1> Oops! </h1>
-                    <h2> 404 Not Found </h2>
-                    <div class="error-details">
-                        ERROR: {{ error.error }}
-                    </div>
-                    <div class="error-actions go-home">
-                        <a href="/" class="btn btn-primary btn-lg"><span class="glyphicon glyphicon-home"></span>
-                            Take Me Home </a>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="container d-flex justify-content-center align-items-center vh-100">
+  <div class="text-center p-5 card shadow border-0 rounded-4 max-w-lg">
+    <div class="display-1 text-danger fw-bold mb-3"><i class="fa-solid fa-triangle-exclamation me-3"></i>404</div>
+    <h3 class="fw-bold text-dark">Oops! Page Not Found</h3>
+    <p class="text-muted mt-2 mb-4">
+      {% if error and error.error %}
+        {{ error.error }}
+      {% else %}
+        The requested page or resource could not be found.
+      {% endif %}
+    </p>
+    <div>
+      <a href="/" class="btn btn-primary px-4 py-2 rounded-pill shadow-sm fw-semibold">
+        <i class="fa-solid fa-house me-2"></i>Return Home
+      </a>
     </div>
-
-
-    <style>
-        body {
-            font-size: large;
-
-            text-align: center;
-            background-color: #eff8ff;
-
-
-        }
-
-        .main {
-            background-color: black;
-            color: white;
-            opacity: 70%;
-            border-radius: 20px;
-            margin-top: 10%;
-            padding: 30px 20px 40px 20px;
-
-        }
-
-        .go-home {
-            color: white;
-            border-radius: 20px;
-            padding: 20px 20px 40px 20px;
-
-        }
-    </style>
-
-    {% endblock body %}
+  </div>
+</div>
+{% endblock body %}

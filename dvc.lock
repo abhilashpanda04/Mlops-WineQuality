@@ -7,43 +7,53 @@ stages:
       md5: ccc8d3507eb151f53f760d36abdef888
       size: 91998
     - path: src/get_data.py
-      md5: 879206014e83eef3df6c49168a5ab31e
-      size: 661
+      hash: md5
+      md5: 5bc03440978b6a6fc801a80d1990c90c
+      size: 1295
     - path: src/load_data.py
-      md5: a5dfc3c3d2c8c49762cb022980c005a8
-      size: 723
+      hash: md5
+      md5: c5477d78c3bc5fbf75290191bcb0338a
+      size: 1058
     outs:
     - path: data/raw/winequality.csv
-      md5: dcb9f7736a81b73cf4cf803b5ef3f07e
-      size: 102550
+      hash: md5
+      md5: d98e8f2eca228c11c4de1cc96866a54d
+      size: 91998
   split_data:
     cmd: python src/split_data.py --config=params.yaml
     deps:
     - path: data/raw/winequality.csv
-      md5: dcb9f7736a81b73cf4cf803b5ef3f07e
-      size: 102550
+      hash: md5
+      md5: d98e8f2eca228c11c4de1cc96866a54d
+      size: 91998
     - path: src/split_data.py
-      md5: 8c73654ffcd0e8e178b657b256e0a908
-      size: 1065
+      hash: md5
+      md5: d5a1c7978999f2e6971659ea52e17532
+      size: 1651
     outs:
     - path: data/processed/test_winequality.csv
-      md5: 5787b15b8bb42aa53b817010d433f041
-      size: 19422
+      hash: md5
+      md5: 01718da3bd6e206060ed00667ca1a389
+      size: 18510
     - path: data/processed/train_winequality.csv
-      md5: e320178d92172ce1a1cbcbe92e6bdfa1
-      size: 77345
+      hash: md5
+      md5: 4bccf4d668cdc60115de42ba74d416ab
+      size: 73633
   train_and_evaluate:
     cmd: python src/train_and_evaluate.py --config=params.yaml
     deps:
     - path: data/processed/test_winequality.csv
-      md5: 5787b15b8bb42aa53b817010d433f041
-      size: 19422
+      hash: md5
+      md5: 01718da3bd6e206060ed00667ca1a389
+      size: 18510
     - path: data/processed/train_winequality.csv
-      md5: e320178d92172ce1a1cbcbe92e6bdfa1
-      size: 77345
+      hash: md5
+      md5: 4bccf4d668cdc60115de42ba74d416ab
+      size: 73633
     - path: src/train_and_evaluate.py
-      md5: 2baf113e80653de247356a298cc1e3fd
-      size: 2775
+      hash: md5
+      md5: 775b4ad823e75ce33a4445ed374fb1e4
+      size: 3278
     params:
       params.yaml:
         estimators.ElasticNet.params.alpha: 0.5
@@ -51,10 +61,12 @@ stages:
     outs:
     - path: report/params.json
       md5: 26a0278a22f0e11f402e1ba02a7fbc22
-      size: 44
+      size: 41
     - path: report/scores.json
-      md5: 5eac187641bc399130ba032c5231a17c
-      size: 100
+      hash: md5
+      md5: 4784f83c44efbb8ab4e380a18db0a5bd
+      size: 96
     - path: saved_models/model.joblib
-      md5: c629e3e3efa5a867f5e18b1d1981432e
-      size: 722
+      hash: md5
+      md5: 726daf325e5c5bf3cebd217e80945037
+      size: 1183

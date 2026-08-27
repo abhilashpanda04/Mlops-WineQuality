@@ -23,5 +23,6 @@ files=[
 ]
 
 for file_ in files:
-        with open(file_,"w") as f:
+    if not os.path.exists(file_):
+        with open(file_, "w") as f:
             pass

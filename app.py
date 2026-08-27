@@ -1,75 +1,66 @@
-from flask import Flask, render_template, request,jsonify
 import os
-import yaml
-import joblib
-import numpy as np  
+from flask import Flask, render_template, request, jsonify
+import numpy as np
+
+from prediction_service.prediction import (
+    predict,
+    validate_input,
+    api_response,
+    NotInRange,
+    FormValidationError,
+    FEATURE_KEYS,
+    EXPECTED_RANGES
+)
+
+params_path = "params.yaml"
+webapp_root = "webapp"
+
+static_dir = os.path.join(webapp_root, "static")
+template_dir = os.path.join(webapp_root, "templates")
+
+app = Flask(__name__, static_folder=static_dir, template_folder=template_dir)
 
 
-params_path="params.yaml"
-webapp_root="webapp"
-
-static_dir=os.path.join(webapp_root,"static")
-template_dir=os.path.join(webapp_root,"templates")
-
-app=Flask(__name__,static_folder=static_dir,template_folder=template_dir)
-
-def read_params(config_path):
-    with open(config_path) as yaml_file:
-        config = yaml.safe_load(yaml_file)
-    return config
-
-
-def predict(data):
-    config = read_params(params_path)
-    model_dir_path = config["webapp_model_dir"]
-    model = joblib.load(model_dir_path)
-    prediction = model.predict(data)
-    print(prediction)
-    return prediction[0]
-
-def api_response(request):
-    try:
-        data = np.array([list(request.json.values())])
-        response = predict(data)
-        response = {"response":response}
-        return response
-    except Exception as e:
-        print(e)
-        error = {"error": "Something went wrong!! Try again"}
-        return error
-
+@app.route("/health", methods=["GET"])
+def health():
+    """Health check endpoint for service monitoring."""
+    return jsonify({"status": "healthy", "service": "Wine Quality Prediction API"}), 200
 
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
         try:
-            if request.form:
-                data = dict(request.form).values()
-                data = [list(map(float, data))]
-                response = predict(data)
-                return render_template("index.html", response=response)
-
-            elif request.json:
-                response = api_response(request)
-                return jsonify(response)
-
+            if request.is_json:
+                json_data = request.get_json()
+                response = api_response(json_data, config_path=params_path)
+                status_code = 200 if response.get("status") == "success" else 400
+                return jsonify(response), status_code
+            elif request.form:
+                form_data = dict(request.form)
+                validated_vals = validate_input(form_data)
+                data = np.array([validated_vals])
+                prediction_res = predict(data, config_path=params_path)
+                return render_template("index.html", response=prediction_res, form_data=form_data)
+        except (NotInRange, FormValidationError) as e:
+            return render_template("index.html", error=str(e), form_data=request.form), 400
         except Exception as e:
-            print(e)
-            error = {"error": "Something went wrong!! Try again"}
-            return render_template("404.html", error=error)
-    else:
-        return render_template("index.html")
+            return render_template("index.html", error=f"Unexpected error: {str(e)}", form_data=request.form), 500
+    
+    return render_template("index.html")
 
 
+@app.route("/predict", methods=["POST"])
+def predict_api():
+    """Dedicated API endpoint accepting JSON payload."""
+    try:
+        json_data = request.get_json(force=True)
+        response = api_response(json_data, config_path=params_path)
+        status_code = 200 if response.get("status") == "success" else 400
+        return jsonify(response), status_code
+    except Exception as e:
+        return jsonify({"error": str(e), "status": "error"}), 500
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=True)
-
-
-
-
-
-
-
+    app.run(host="0.0.0.0", port=5000, debug=True)

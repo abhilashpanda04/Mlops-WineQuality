@@ -1,108 +1,180 @@
 {% extends 'base.html' %}
 
 {% block title %}
-WineQuality
+Wine Quality Prediction | MLOps App
 {% endblock title %}
 
-
 {% block custom_css %}
-<!-- Custom CSS -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 {% endblock custom_css %}
 
-
 {% block body %}
-<!-- nav bar -->
-
-<nav class="navbar navbar-expand-lg navbar-light shadow fixed-top" style="background-color: #e3f2fd;">
-    <a class="navbar-brand" href="/">WineQualityPrediction</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
+<!-- Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/"><i class="fa-solid fa-wine-glass text-danger me-2"></i>Wine Quality Predictor</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav">
-            <li class="nav-item active">
-                <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="https://github.com/c17hawke/dvc-plus-cml-test">source code</a>
-            </li>
-        </ul>
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link active" href="/">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/health" target="_blank">API Health</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/abhilashpanda04/Mlops-WineQuality" target="_blank"><i class="fa-brands fa-github me-1"></i>GitHub Repository</a>
+        </li>
+      </ul>
     </div>
+  </div>
 </nav>
-<div>
-    <!-- nav bar ends -->
 
-    <div class="container-fluid masthead">
-        <br>
-        <br>
-        <br>
-        <br>
-        <div class="container">
-            <div class="row">
-                <div class="col">
-                    <form method="POST">
-                        <!-- Input block-->
-                        <div class="form-group">
-                            <label for="translation">
-                                <blockquote class="blockquote">
-                                    <p class="mb-2">Enter the details as indicated:</p>
-                                </blockquote>
-                            </label>
-                            <textarea class="form-control" name="fixed_acidity" rows="1"
-                                placeholder="fixed acidity expected range 4.6 to 15.9"></textarea>
-                            <textarea class="form-control" name="volatile_acidity" rows="1"
-                                placeholder="volatile acidity expected range 0.12 to 1.58"></textarea>
-                            <textarea class="form-control" name="citric_acid" rows="1"
-                                placeholder="citric acid expected range 0.0 to 1.0"></textarea>
-                            <textarea class="form-control" name="residual_sugar" rows="1"
-                                placeholder="residual sugar expected range 0.9 to 15.5"></textarea>
-                            <textarea class="form-control" name="chlorides" rows="1" 
-                                placeholder="chlorides expected range 0.012 to 0.611"></textarea>
-                            <textarea class="form-control" name="free_sulfur_dioxide" rows="1"
-                                placeholder="free sulfur dioxide expected range 1.0 to 72.0"></textarea>
-                            <textarea class="form-control" name="total_sulfur_dioxide" rows="1"
-                                placeholder="total sulfur dioxide expected range 6.0 to 289.0"></textarea>
-                            <textarea class="form-control" name="density" rows="1" 
-                                placeholder="density expected range 0.99007 to 1.00369"></textarea>
-                            <textarea class="form-control" name="pH" rows="1" 
-                                placeholder="pH expected range 2.74 to 4.01"></textarea>
-                            <textarea class="form-control" name="sulphates" rows="1" 
-                                placeholder="sulphates expected range 0.33 to 2.0"></textarea>
-                            <textarea class="form-control" name="alcohol" rows="1" 
-                                placeholder="alcohol expected range 8.4 to 14.9"></textarea>
+<div class="container my-5">
+  <div class="row justify-content: center">
+    <div class="col-lg-10">
+      
+      {% if error %}
+      <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="fa-solid fa-triangle-exclamation me-2"></i><strong>Validation Error:</strong> {{ error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      {% endif %}
 
-                        </div>
-
-                        <!-- Select output language here. -->
-                        <div class="form-group">
-                        </div>
-                        <button type="submit" class="btn btn-primary mb-2">Predict</button></br>
-                        </br>
-                    </form>
-                    <!-- Translated text returned by the Translate API is rendered here. -->
-                </div>
-                <div class="col">
-                    <form>
-                        <div class="form-group">
-                            <label for="translation-result">
-
-                                <blockquote class="blockquote">
-                                    <p class="mb-2">Prediction:</p>
-                                </blockquote>
-
-                            </label>
-                            <textarea readonly class="form-control" id="exTextarea" rows="5">{{ response }}</textarea>
-                        </div>
-                    </form>
-                </div>
+      <div class="row g-4">
+        <!-- Input Form Section -->
+        <div class="col-md-7">
+          <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+              <h5 class="card-title mb-0 fw-bold text-dark"><i class="fa-solid fa-sliders text-primary me-2"></i>Wine Chemical Features</h5>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="fillSampleData()">
+                <i class="fa-solid fa-wand-magic-sparkles me-1"></i>Sample Values
+              </button>
             </div>
+            <div class="card-body p-4">
+              <form method="POST" action="/" id="wineForm">
+                <div class="row g-3">
+                  
+                  <div class="col-6">
+                    <label class="form-label small fw-semibold">Fixed Acidity <span class="text-muted">(4.0-16.0)</span></label>
+                    <input type="number" step="any" min="4.0" max="16.0" class="form-control" name="fixed_acidity" id="fixed_acidity" value="{{ form_data.fixed_acidity if form_data else '' }}" required placeholder="e.g. 7.4">
+                  </div>
+
+                  <div class="col-6">
+                    <label class="form-label small fw-semibold">Volatile Acidity <span class="text-muted">(0.1-2.0)</span></label>
+                    <input type="number" step="any" min="0.1" max="2.0" class="form-control" name="volatile_acidity" id="volatile_acidity" value="{{ form_data.volatile_acidity if form_data else '' }}" required placeholder="e.g. 0.70">
+                  </div>
+
+                  <div class="col-6">
+                    <label class="form-label small fw-semibold">Citric Acid <span class="text-muted">(0.0-1.5)</span></label>
+                    <input type="number" step="any" min="0.0" max="1.5" class="form-control" name="citric_acid" id="citric_acid" value="{{ form_data.citric_acid if form_data else '' }}" required placeholder="e.g. 0.00">
+                  </div>
+
+                  <div class="col-6">
+                    <label class="form-label small fw-semibold">Residual Sugar <span class="text-muted">(0.5-20.0)</span></label>
+                    <input type="number" step="any" min="0.5" max="20.0" class="form-control" name="residual_sugar" id="residual_sugar" value="{{ form_data.residual_sugar if form_data else '' }}" required placeholder="e.g. 1.9">
+                  </div>
+
+                  <div class="col-6">
+                    <label class="form-label small fw-semibold">Chlorides <span class="text-muted">(0.01-1.0)</span></label>
+                    <input type="number" step="any" min="0.01" max="1.0" class="form-control" name="chlorides" id="chlorides" value="{{ form_data.chlorides if form_data else '' }}" required placeholder="e.g. 0.076">
+                  </div>
+
+                  <div class="col-6">
+                    <label class="form-label small fw-semibold">Free Sulfur Dioxide <span class="text-muted">(1.0-100)</span></label>
+                    <input type="number" step="any" min="1.0" max="100.0" class="form-control" name="free_sulfur_dioxide" id="free_sulfur_dioxide" value="{{ form_data.free_sulfur_dioxide if form_data else '' }}" required placeholder="e.g. 11.0">
+                  </div>
+
+                  <div class="col-6">
+                    <label class="form-label small fw-semibold">Total Sulfur Dioxide <span class="text-muted">(5.0-350)</span></label>
+                    <input type="number" step="any" min="5.0" max="350.0" class="form-control" name="total_sulfur_dioxide" id="total_sulfur_dioxide" value="{{ form_data.total_sulfur_dioxide if form_data else '' }}" required placeholder="e.g. 34.0">
+                  </div>
+
+                  <div class="col-6">
+                    <label class="form-label small fw-semibold">Density <span class="text-muted">(0.98-1.05)</span></label>
+                    <input type="number" step="any" min="0.98" max="1.05" class="form-control" name="density" id="density" value="{{ form_data.density if form_data else '' }}" required placeholder="e.g. 0.9978">
+                  </div>
+
+                  <div class="col-6">
+                    <label class="form-label small fw-semibold">pH <span class="text-muted">(2.5-4.5)</span></label>
+                    <input type="number" step="any" min="2.5" max="4.5" class="form-control" name="pH" id="pH" value="{{ form_data.pH if form_data else '' }}" required placeholder="e.g. 3.51">
+                  </div>
+
+                  <div class="col-6">
+                    <label class="form-label small fw-semibold">Sulphates <span class="text-muted">(0.2-2.5)</span></label>
+                    <input type="number" step="any" min="0.2" max="2.5" class="form-control" name="sulphates" id="sulphates" value="{{ form_data.sulphates if form_data else '' }}" required placeholder="e.g. 0.56">
+                  </div>
+
+                  <div class="col-12">
+                    <label class="form-label small fw-semibold">Alcohol % <span class="text-muted">(7.0-16.0)</span></label>
+                    <input type="number" step="any" min="7.0" max="16.0" class="form-control" name="alcohol" id="alcohol" value="{{ form_data.alcohol if form_data else '' }}" required placeholder="e.g. 9.4">
+                  </div>
+
+                </div>
+
+                <hr class="my-4">
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm">
+                  <i class="fa-solid fa-square-poll-vertical me-2"></i>Predict Quality Score
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
 
-        {% endblock body %}
+        <!-- Result Display Section -->
+        <div class="col-md-5">
+          <div class="card shadow-sm border-0 rounded-3 h-100">
+            <div class="card-header bg-white py-3 border-bottom">
+              <h5 class="card-title mb-0 fw-bold text-dark"><i class="fa-solid fa-chart-pie text-success me-2"></i>Prediction Result</h5>
+            </div>
+            <div class="card-body p-4 text-center d-flex flex-column justify-content-center align-items-center">
+              {% if response is not none and response is defined %}
+              <div class="mb-3">
+                <span class="badge rounded-pill bg-success px-4 py-2 fs-6">Model Prediction</span>
+              </div>
+              <div class="display-1 fw-bold text-primary my-2">{{ response }}</div>
+              <p class="text-muted mb-0">Predicted Wine Quality Score (Scale 0 to 10)</p>
+              <div class="mt-4 w-100">
+                <div class="progress" style="height: 12px;">
+                  <div class="progress-bar bg-success" role="progressbar" style="width: {{ (response / 10) * 100 }}%;" aria-valuenow="{{ response }}" aria-valuemin="0" aria-valuemax="10"></div>
+                </div>
+              </div>
+              {% else %}
+              <div class="text-muted py-5">
+                <i class="fa-solid fa-bottle-wine display-3 mb-3 text-secondary opacity-50"></i>
+                <h6>No prediction yet</h6>
+                <p class="small mb-0">Fill out the chemical parameters or click "Sample Values" to evaluate wine quality.</p>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
 
-        {% block custom_js %}
-        <!-- Custom JS -->
-        <script src="{{ url_for('static', filename='script/index.js') }}"></script>
-        {% endblock custom_js %}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function fillSampleData() {
+  document.getElementById("fixed_acidity").value = 7.4;
+  document.getElementById("volatile_acidity").value = 0.70;
+  document.getElementById("citric_acid").value = 0.00;
+  document.getElementById("residual_sugar").value = 1.9;
+  document.getElementById("chlorides").value = 0.076;
+  document.getElementById("free_sulfur_dioxide").value = 11.0;
+  document.getElementById("total_sulfur_dioxide").value = 34.0;
+  document.getElementById("density").value = 0.9978;
+  document.getElementById("pH").value = 3.51;
+  document.getElementById("sulphates").value = 0.56;
+  document.getElementById("alcohol").value = 9.4;
+}
+</script>
+{% endblock body %}
+
+{% block custom_js %}
+<script src="{{ url_for('static', filename='script/index.js') }}"></script>
+{% endblock custom_js %}

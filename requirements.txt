@@ -1,13 +1,21 @@
-# local package install
+# Local package editable install
 -e .
 
-# third party packages
-dvc
-dvc[gdrive]
-sklearn
+# Core data science and ML dependencies
+scikit-learn
 pandas
-pytest
-tox
-flake8
+numpy
+PyYAML
+joblib
+
+# MLOps & Data Version Control
+dvc
+
+# Web & Deployment
 flask
 gunicorn
+
+# Testing & Quality
+pytest
+flake8
+tox

@@ -1,10 +1,9 @@
-Metadata-Version: 1.0
+Metadata-Version: 2.4
 Name: src
-Version: 0.0.0
-Summary: its a wineq package
-Home-page: UNKNOWN
+Version: 0.0.1
+Summary: Wine Quality Prediction MLOps Package
 Author: abhilash
-Author-email: UNKNOWN
 License: MIT
-Description: UNKNOWN
-Platform: UNKNOWN
+Dynamic: author
+Dynamic: license
+Dynamic: summary
