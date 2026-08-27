@@ -10,8 +10,50 @@ on:
       - main
       - master
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 jobs:
   test-and-lint:
+    name: Test & Lint (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Lint with flake8
+        run: |
+          # Stop build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Exit-zero treats all non-critical lint errors as warnings
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Run Pytest Test Suite
+        run: |
+          pytest -v
+
+  cml-dvc-report:
+    name: CML & DVC Pipeline Report
+    needs: test-and-lint
     runs-on: ubuntu-latest
 
     steps:
@@ -31,26 +73,41 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Lint with flake8
-        run: |
-          # Stop build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # Treat all warnings as non-fatal
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      - name: Setup CML
+        uses: iterative/setup-cml@v1
 
-      - name: Run DVC Pipeline
+      - name: Reproduce DVC Pipeline & Generate CML Report
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Reproduce pipeline
           dvc repro
 
-      - name: Run Pytest Test Suite
-        run: |
-          pytest -v
+          # Generate report
+          echo "## MLOps Pipeline Report" > report.md
+          echo "### Model Metrics" >> report.md
+          cat report/scores.json >> report.md
 
-  deploy:
+          echo "### Model Parameters" >> report.md
+          cat report/params.json >> report.md
+
+          # Post CML report to PR if in pull request context
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            cml comment create report.md
+          fi
+
+  docker-build:
+    name: Container Build & Verification
     needs: test-and-lint
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
     steps:
-      - name: Deploy Placeholder
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image
         run: |
-          echo "CI/CD tests passed successfully. Ready for Heroku/Docker deployment."
+          docker build -t wine-quality-mlops:latest .
